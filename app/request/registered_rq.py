@@ -1,8 +1,13 @@
 from app.storage.models import async_session
 import app.storage.models as db
 from sqlalchemy import select, or_
-from sqlalchemy import DateTime
+from aiogram.fsm.context import FSMContext
 from datetime import datetime, timedelta
+import asyncio
+from main import Bot
+import app.onboarding as ops
+
+
 
 async def reg_organization(organization_name: str):
     async with async_session() as session:
@@ -49,30 +54,26 @@ async def reg_mentor_or_boss(
             return True
 
 
-async def reg_users(department_id: int, number: str, name: str, telegram_id) -> bool:
+async def reg_users(department_id: int, number: str, name: str, telegram_id, bot: Bot, state: FSMContext) -> bool:
     async with async_session() as session:
         try:
-            # ищем, есть ли пользователь с таким telegram_id или number
             result = await session.execute(
                 select(db.User).where(
                     or_(db.User.telegram_id == telegram_id,
                         db.User.number == number)
                 )
             )
-            existing_user = result.scalars().first()
-            if existing_user is not None:
-                # пользователь уже есть — прекращаем
+            if result.scalars().first():
                 return False
 
-            # иначе — получаем org_id
             org_res = await session.execute(
                 select(db.Department.organization_id)
                 .where(db.Department.id == department_id)
             )
             org_id = org_res.scalar_one_or_none()
-            if org_id is None:
+            if not org_id:
                 return False
-            
+
             new_user = db.User(
                 user_department_id=department_id,
                 user_organization_id=org_id,
@@ -80,25 +81,82 @@ async def reg_users(department_id: int, number: str, name: str, telegram_id) -> 
                 number=number,
                 telegram_id=telegram_id,
             )
-            data_start = datetime.utcnow().date()
-            data_two = data_start + timedelta(minutes=7)
-            data_three = data_start + timedelta(minutes=30)
-            data_four = data_start + timedelta(minutes=90)
+
+            now = datetime.utcnow()
             history = db.History(
-                data_start=data_start.isoformat(),
-                data_7=data_two.isoformat(),
-                data_30=data_three.isoformat(),
-                data_90=data_four.isoformat()
+                data_start=now.date().isoformat(),
+                data_7=(now + timedelta(days=7)).date().isoformat(),
+                data_30=(now + timedelta(days=30)).date().isoformat(),
+                data_90=(now + timedelta(days=90)).date().isoformat(),
             )
+
             new_user.chats.append(history)
             session.add(new_user)
             await session.commit()
+
+            # 🔥 АВТОЗАПУСК ОПРОСОВ (ТЕСТ: 30 СЕК)
+            await schedule_polls_for_user(
+                user_id=telegram_id,
+                bot=bot,
+                state=state,
+                history=history
+            )
+
             return True
 
         except Exception as e:
             print(f"Error inserting user: {e}")
-            # можно session.rollback() при ошибке
             return False
+
+async def schedule_polls_for_user(
+    user_id: int,
+    bot: Bot,
+    history: db.History
+):
+    """
+    Планирует автозапуск опросов для одного пользователя
+    (ТЕСТОВЫЙ РЕЖИМ — короткие задержки)
+    """
+
+    async def run_poll(poll_type: str, delay: int):
+        await asyncio.sleep(delay)  # задержка перед отправкой
+        await bot.send_message(user_id, ops.INTRO_TEXTS[poll_type])
+        await asyncio.sleep(2)  # маленькая пауза
+        await start_poll_without_fsm(user_id, bot, poll_type)
+
+    # 🔴 ТЕСТОВЫЕ ЗАДЕРЖКИ (в секундах)
+    asyncio.create_task(run_poll("week1", 1))   # через 1 сек
+    asyncio.create_task(run_poll("month1", 10)) # через 10 сек
+    asyncio.create_task(run_poll("month3", 30)) # через 30 сек
+
+async def start_poll_without_fsm(user_id: int, bot: Bot, poll_type: str):
+    questions = {
+        "week1": ops.week1_questions,
+        "month1": ops.month1_questions,
+        "month3": ops.month3_questions
+    }[poll_type]
+
+    # Просто отправляем первый вопрос
+    await bot.send_message(user_id, questions[0])
+
+async def restore_schedules(bot: Bot, state: FSMContext):
+    async with async_session() as session:
+        result = await session.execute(
+            select(db.History)
+            .join(db.User)
+            .where(db.User.telegram_id.isnot(None))
+        )
+
+        histories = result.scalars().all()
+
+        for h in histories:
+            await schedule_polls_for_user(
+                user_id=h.user.telegram_id,
+                bot=bot,
+                state=state,
+                history=h
+            )
+
 
 
 async def get_all_organization():

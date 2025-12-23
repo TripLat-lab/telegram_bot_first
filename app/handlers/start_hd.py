@@ -18,7 +18,7 @@ router = Router()
 async def back_user(callback: CallbackQuery):
     await callback.message.answer('Выберете действие:',reply_markup=kb_start.start_kb)
     
-@router.message(Command('star'))
+@router.message(Command('start'))
 async def cmd_start(message: Message):
     await message.answer('👋 Привет! Добро пожаловать в команду группы компаний "ПМК". '
             '<b>Давай знакомиться, меня зовут Ботёк 🥸.</b> '
