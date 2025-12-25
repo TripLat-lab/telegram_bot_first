@@ -1,6 +1,6 @@
 from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery
-from aiogram import F, Router, types
+from aiogram import F, Router, types, Bot
 from aiogram.fsm.context import FSMContext
 import logging
 
@@ -371,7 +371,7 @@ async def input_users_name(message: types.Message, state: FSMContext):
 
 
 @router.callback_query(F.data.in_(["yes_users", "no_users"]))
-async def save_user(callback: CallbackQuery, state: FSMContext):
+async def save_user(callback: CallbackQuery, state: FSMContext, bot: Bot):
     if callback.data == "yes_users":
         data = await state.get_data()
         department_id = data.get("department_id")
@@ -384,7 +384,12 @@ async def save_user(callback: CallbackQuery, state: FSMContext):
             await state.clear() 
             return
         successful = await rq_reg.reg_users(
-            department_id, number, name, callback.from_user.id
+        department_id=department_id,
+        number=number,
+        name=name,
+        telegram_id=callback.from_user.id,
+        bot=bot,
+        state=state
         )
         if successful:
             if not successful:

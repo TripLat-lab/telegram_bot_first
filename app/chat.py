@@ -6,8 +6,8 @@ from aiogram.exceptions import TelegramBadRequest
 from cachetools import TTLCache
 
 router = Router()
-ADMIN_ID = 1141265575
-BUH_ID = 1141265575
+ADMIN_ID = 5792104302
+BUH_ID = 5792104302
 
 # Раздельные кеши для разных поддержек
 admin_chats = TTLCache(maxsize=1000, ttl=86400)

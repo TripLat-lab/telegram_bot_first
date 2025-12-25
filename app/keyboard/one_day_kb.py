@@ -66,6 +66,14 @@ inline_next_key_nine = InlineKeyboardMarkup(
 )
 
 
+inline_next_key_final = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [InlineKeyboardButton(text="Все понятно, готов к дальнейшим шагам", callback_data="final")],
+        [InlineKeyboardButton(text="Связаться с HR", callback_data="support")]
+    ]
+)
+
+
 def regulations_all(regulations, prefix = 'regulation'):
     builder = InlineKeyboardBuilder()
     for regulation in regulations:
