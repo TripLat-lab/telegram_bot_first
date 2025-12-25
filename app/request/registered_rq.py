@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 import asyncio
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, and_
 from aiogram.fsm.context import FSMContext
 from main import Bot
 
@@ -195,17 +195,59 @@ async def reg_new_admin(new_telegram_id: int, new_pin: str) -> bool:
 
 # ====================== Организации по умолчанию ======================
 async def default_org():
-    async with async_session() as session:
+    async with async_session() as session:  # одна сессия
+        # Проверяем, есть ли уже хоть одна организация
         default = await session.scalar(select(db.Organization))
         if not default:
             orgs = [
                 db.Organization(organization_name="ПМК"),
                 db.Organization(organization_name="ГК ПМК"),
+                db.Organization(organization_name=""),  # пустое имя
                 db.Organization(organization_name="ХАНГАР"),
                 db.Organization(organization_name="СКОЛЬКО?МОЖНО")
             ]
             session.add_all(orgs)
-            await session.commit()
+            await session.commit()  # коммитим, чтобы появились id
+
+        # Список департаментов
+        departments = [
+            'Отдел бухгалтерии',
+            'Коммерческий отдел',
+            'Отдел маркетинга',
+            'ОТ и ТБ',
+            'Отдел персонала',
+            'Отдел снабжения и логистики',
+            'Отдел ПТО',
+            'Юридический отдел',
+            'IT отдел',
+        ]
+
+        # Получаем все организации
+        result = await session.execute(select(db.Organization))
+        orgs = result.scalars().all()
+
+        for org in orgs:
+            for dept_name in departments:
+                # Проверяем, есть ли такой департамент
+                exists = await session.execute(
+                    select(db.Department).where(
+                        and_(
+                            db.Department.organization_id == org.id,
+                            db.Department.department_name == dept_name
+                        )
+                    )
+                )
+                if exists.scalars().first():
+                    continue  # пропускаем если есть
+
+                # Создаем новый департамент
+                new_dept = db.Department(
+                    department_name=dept_name,
+                    organization_id=org.id
+                )
+                session.add(new_dept)
+
+        await session.commit()
 
 
 # ====================== Получение наставника ======================

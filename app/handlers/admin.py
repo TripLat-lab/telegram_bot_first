@@ -339,7 +339,7 @@ async def auth(message: Message, state: FSMContext):
     user_admin = await rq_reg.check_is_admin(telegram_id)
     if not user_admin:
         await message.answer(
-            "Введите свой имя", reply_markup=kb_admin.inline_reg_user_back
+            "Введите своё имя", reply_markup=kb_admin.inline_reg_user_back
         )
         return
     await message.answer(

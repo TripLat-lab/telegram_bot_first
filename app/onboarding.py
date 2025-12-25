@@ -309,9 +309,9 @@ async def schedule_polls_for_user(user_id: int, bot: Bot, force_restart: bool = 
 
     # Создаём задачи с разными задержками
     tasks = [
-        asyncio.create_task(run_poll("week1", 10)),    # 10 секунд для тестирования
-        asyncio.create_task(run_poll("month1", 120)), # 1 день (24 часа)
-        asyncio.create_task(run_poll("month3", 180)) # 30 дней
+        asyncio.create_task(run_poll("week1", 604800)),    # 10 секунд для тестирования
+        asyncio.create_task(run_poll("month1", 2678400)), # 1 день (24 часа)
+        asyncio.create_task(run_poll("month3", 7776000)) # 30 дней
     ]
     
     running_tasks[user_id] = tasks

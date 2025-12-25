@@ -6,8 +6,8 @@ inline_total_menu = InlineKeyboardMarkup(inline_keyboard=[
          InlineKeyboardButton(text='Филиалы', callback_data='branches')],
         [InlineKeyboardButton(text='Бонусы', callback_data='bonus'),
         InlineKeyboardButton(text='Порядок трудоустройства', callback_data='employment')],
-        [InlineKeyboardButton(text='Регламенты', callback_data='next_eight'),
-        InlineKeyboardButton(text='Welcome Book', callback_data='next_nine')],
+        [InlineKeyboardButton(text='Регламенты', callback_data='next_seven'),
+        InlineKeyboardButton(text='Welcome Book', callback_data='welcome')],
         ])
 
 inline_info_branches = InlineKeyboardMarkup(inline_keyboard=[
@@ -74,3 +74,5 @@ inline_employment_info = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text='Вахта', callback_data='vahta')],
     [InlineKeyboardButton(text='Назад', callback_data='back_total_info')]
 ])
+
+

@@ -398,3 +398,37 @@ async def final(callback: CallbackQuery):
         'Если что-то будет непонятно, смело обращайся к коллегам или руководителю.\n\n'
     )
     await callback.message.answer(f'{text}', parse_mode='HTML')
+
+
+@router.callback_query(F.data == 'welcome')
+async def upload_welcomebook(callback: CallbackQuery):
+   type = 'Welcome book'
+   text = (
+        f'Вернёмся к внутренним организационным моментам. ' 
+        f'\nДля быстрой адаптации в коллективе мы создали для '
+        f'тебя уникальный <b>Welcome Book 🕮</b>, который поможет сориентироваться в первые дни работы.'
+   )
+   text_two = (
+        
+        f'Отлично, теперь ты подробно изучил наши внутренние регламенты и готов приступить к работе\n'
+        f'В заключении давай же узнаем, что тебя ждёт в <b>первый день.</b>'
+    )
+   await callback.answer('⏳ Ищем файлы...')
+   file_records = await rq_link.get_commission_photo(type, organization_id=None, department_id=None)
+   if file_records:
+            for file_record in file_records:
+               file_path = rq_link.BASE_DIR / file_record.file_path
+
+               if file_path.exists() and file_path.is_file():
+                     # Отправляем через ускоренный метод
+                     await send_pdf_file(
+                        callback=callback,
+                        file_path=file_path,
+                        caption=text,
+                        parse_mode='HTML'
+
+                     )
+               else:
+                     await callback.message.answer("Файл не найден в базе данных")
+               await asyncio.sleep(1.5)
+               await callback.message.answer(f'{text_two}', parse_mode='HTML')
