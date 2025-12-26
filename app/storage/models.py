@@ -7,6 +7,21 @@ from pathlib import Path
 engine = create_async_engine(url='sqlite+aiosqlite:///storage/db.storage', connect_args={"check_same_thread": False},echo=True)
 async_session = async_sessionmaker(engine)
 
+'''
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+
+async def add_private_column():
+    async with async_session() as session:
+        await session.execute(
+            text("ALTER TABLE departments ADD COLUMN private BOOLEAN DEFAULT 0 NOT NULL")
+        )
+        await session.commit()
+# Запуск
+import asyncio
+asyncio.run(add_private_column())
+'''
+
 class Base(AsyncAttrs, DeclarativeBase):
     pass
 
@@ -32,6 +47,7 @@ class Department(Base):
     department_name: Mapped[str] = mapped_column(String(50))
     organization_id: Mapped[int] = mapped_column(ForeignKey("organization.id"))
     organization: Mapped["Organization"] = relationship(back_populates="departments")
+    private: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     users: Mapped[list["User"]] = relationship(back_populates="department")
     supervisors: Mapped[list["Supervisor"]] = relationship("Supervisor", back_populates="department")
     files: Mapped[list["DepartmentFile"]] = relationship("DepartmentFile", back_populates="department")

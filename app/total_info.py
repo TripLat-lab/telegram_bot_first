@@ -20,7 +20,12 @@ async def back_total_info(callback: CallbackQuery):
 
 @router.message (F.text == 'Общая информация')
 async def total_info_start (message: Message):
-    await message.answer('Выберите нужный пункт', reply_markup=kb_info.inline_total_menu)
+    user_id = message.from_user.id
+    is_private = await rq_reg.check_is_private_files(user_id)
+    if not is_private:
+        await message.answer('Выберите нужный пункт', reply_markup=kb_info.inline_total_menu)
+    else:
+        await message.answer('Выберите нужный пункт', reply_markup=kb_info.inline_total_menu_private)
 
 @router.callback_query(F.data == 'branches')
 async def info_branches (callback: CallbackQuery):
@@ -611,3 +616,7 @@ async def vahta_info(callback:CallbackQuery):
                 await callback.message.answer("Файл не найден на сервере")
     else:
         await callback.message.answer("Файл не найден в базе данных")
+
+@router.callback_query(F.data == 'motivation')
+async def motivation(callback: CallbackQuery):
+    pass

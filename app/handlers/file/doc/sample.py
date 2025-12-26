@@ -41,7 +41,7 @@ async def select_holiday_type(callback: CallbackQuery):
 @router.callback_query(F.data == "add_sample")
 async def select_type_file(callback: CallbackQuery, state: FSMContext):
     await callback.message.answer(
-        "Выберите образец чего будет", reply_markup=kb_sample.inline_select_doc_files
+        "Выберите образец заявления", reply_markup=kb_sample.inline_select_doc_files
     )
 
 
@@ -164,7 +164,7 @@ async def offers_and_simple(message: Message):
 @router.callback_query(F.data == "sample")
 async def select_type_file(callback: CallbackQuery, state: FSMContext):
     await callback.message.answer(
-        "Выберите образец чего будет",
+        "Выберите образец заявления",
         reply_markup=kb_sample.inline_select_doc_files_for_user,
     )
 

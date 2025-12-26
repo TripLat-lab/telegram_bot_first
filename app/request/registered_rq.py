@@ -220,6 +220,7 @@ async def default_org():
             'Отдел ПТО',
             'Юридический отдел',
             'IT отдел',
+            'Административно-управленческий отдел'
         ]
 
         # Получаем все организации
@@ -301,3 +302,20 @@ async def get_user_number(telegram_id: int):
 async def get_user_id(number: str):
     async with async_session() as session:
         return await session.scalar(select(db.User.id).where(db.User.number == number))
+
+async def check_is_private_files(telegram_id: int):
+    async with async_session() as session:
+        # Получаем department_id пользователя
+        department_id = await session.scalar(
+            select(db.User.user_department_id)
+            .where(db.User.telegram_id == telegram_id)
+        )
+
+        if not department_id:
+            return False
+        is_private = await session.scalar(
+            select(db.Department.private)
+            .where(db.Department.id == department_id)
+        )
+
+        return is_private

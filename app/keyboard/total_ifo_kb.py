@@ -1,6 +1,17 @@
 from aiogram.types import (InlineKeyboardMarkup, InlineKeyboardButton)
 
 
+inline_total_menu_private = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text='Мотивация', callback_data='motivation')],
+        [InlineKeyboardButton(text='Наши направления', callback_data='directions'),
+         InlineKeyboardButton(text='Филиалы', callback_data='branches')],
+        [InlineKeyboardButton(text='Бонусы', callback_data='bonus'),
+        InlineKeyboardButton(text='Порядок трудоустройства', callback_data='employment')],
+        [InlineKeyboardButton(text='Регламенты', callback_data='next_seven'),
+        InlineKeyboardButton(text='Welcome Book', callback_data='welcome')]
+        ])
+
+
 inline_total_menu = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text='Наши направления', callback_data='directions'),
          InlineKeyboardButton(text='Филиалы', callback_data='branches')],

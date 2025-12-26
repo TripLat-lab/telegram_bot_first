@@ -13,6 +13,7 @@ back_menu_admin = InlineKeyboardMarkup (inline_keyboard=[
 [InlineKeyboardButton(text='Отмена', callback_data='back_menu_admin')]])
 
 inline_admin_users = InlineKeyboardMarkup(inline_keyboard=[
+[InlineKeyboardButton(text='Добавить отдел в приватный режим', callback_data='add_private')],
 [InlineKeyboardButton(text='Добавить руководителя или наставника', callback_data='add_boss')],
 [InlineKeyboardButton(text='Добавить пользователя', callback_data='add_user'),    
 InlineKeyboardButton(text='Добавить отдел', callback_data='add_department' )],  
