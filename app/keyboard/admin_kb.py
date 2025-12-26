@@ -31,7 +31,11 @@ inline_reg_admin_new = InlineKeyboardMarkup(inline_keyboard=[
 
 inline_reg_department = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="Да", callback_data="yes_department")],
-        [InlineKeyboardButton(text="Нет", callback_data="no_department")]])
+        [InlineKeyboardButton(text="Нет", callback_data="back_menu")]])
+
+inline_add_private_dept = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Да", callback_data="yes_private")],
+        [InlineKeyboardButton(text="Отмена", callback_data="back_menu")]])
 
 inline_reg_users = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="Да", callback_data="yes_users")],

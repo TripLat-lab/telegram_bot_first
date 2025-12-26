@@ -6,6 +6,7 @@ import logging
 
 import app.keyboard.start_kb as kb_user
 import app.keyboard.admin_kb as kb_admin
+import app.keyboard.file.sample_kb as kb_sample
 import app.state.start_st as st
 import app.request.start_rq as rq_start
 import app.request.registered_rq as rq_reg
@@ -576,3 +577,51 @@ async def save_boss(callback: CallbackQuery, state: FSMContext):
     else:
         await callback.message.answer("Отменено!", reply_markup=kb_admin.Menu_admin)
     await state.clear() 
+
+
+@router.callback_query(F.data == 'add_private')
+async def select_priv_org(callback: CallbackQuery):
+    org_id = await rq_reg.get_all_organization()
+    await callback.message.answer('Выберите организацию',
+                                  reply_markup=kb_sample.select_sample_org(organization=org_id, prefix='primate_org'))
+@router.callback_query(F.data.startswith(("primate_org"))) 
+async def select_user_dept_for_private(callback: CallbackQuery, state: FSMContext):
+    parts = callback.data.split("|")
+    if len(parts) != 2:
+        await callback.answer("Такой оргазиции не существует", show_alert=True)
+        return
+    org_id = int(parts[1])
+    dept_id = await rq_reg.get_all_department(org_id)
+    await callback.message.answer('Выберите нужны отдел',
+                                  reply_markup=kb_sample.select_sample_dept(departments=dept_id, prefix='private_det'))
+    await state.update_data(org_id=org_id)
+
+@router.callback_query(F.data.startswith(("private_det"))) 
+async def definition_private(callback: CallbackQuery, state: FSMContext):
+    parts = callback.data.split("|")
+    if len(parts) != 2:
+        await callback.answer("Такой оргазиции не существует", show_alert=True)
+        return
+    dept_id = int(parts[1])
+    dept_name = await rq_reg.get_department_name(dept_id)
+    data = await state.get_data()
+    org_id = data.get("org_id")
+    org_name = await rq_reg.get_all_organization_name(org_id)
+    await state.set_state(st.add_private.private)
+    await state.update_data(org_id=org_id, dept_id=dept_id)
+    await callback.message.answer ('Вы указали' 
+                                   f'\nОрганизация: {dept_name}'
+                                   f'\nОтдео: {org_name}'
+                                   '\nВсе верно?:',
+                                   reply_markup=kb_admin.inline_add_private_dept)
+    
+@router.callback_query(F.data == 'yes_private')
+async def save_private(callback: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    dept_id = data.get('dept_id')
+    complite = await rq_reg.save_private(dept_id)
+    if complite == False:
+        await callback.message.answer('Сохранить не получилось обратитесь в поддержку')
+        await state.clear()
+    await callback.message.answer('Сохранено!')
+    await state.clear()

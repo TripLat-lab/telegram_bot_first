@@ -41,6 +41,7 @@ class registered_user(StatesGroup):
 
 class upload_link_files_sample(StatesGroup):
     type = State()
+    select_dept_sample = State()
     select_org_sample = State()
     name_document = State()
     upload_link = State()
@@ -72,6 +73,9 @@ class add_pdf(StatesGroup):
 class add_photo(StatesGroup):
     add_photo = State()
 
+
+class add_private(StatesGroup):
+    private = State()
 
 class type_videos(StatesGroup):
     upload_link_videos = State()

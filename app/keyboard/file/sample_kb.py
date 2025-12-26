@@ -121,8 +121,21 @@ back_menu_sample = InlineKeyboardMarkup(
     ]
 )
 
+def select_sample_dept(departments, prefix=("private", 'private_det')):
+    builder = InlineKeyboardBuilder()
+    for department in departments:
+        department_name = department.department_name
+        builder.button(
+            text=department_name, callback_data=f"{prefix}|{department.id}"
+        )
+        builder.adjust(1)
+    builder.button(text='Назад', callback_data='back_sample_admin')
+    builder.adjust(1)
+    return builder.as_markup()
 
-def select_sample_org(organization, prefix="org_select, org_photo, org_offer"):
+
+def select_sample_org(organization, prefix=("org_select", "org_photo", 'org_offer', 'org_private',
+                                            'primate_org')):
     builder = InlineKeyboardBuilder()
     for org_select in organization:
         organization_name = org_select.organization_name

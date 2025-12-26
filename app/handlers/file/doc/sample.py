@@ -54,7 +54,8 @@ async def select_type_file(callback: CallbackQuery, state: FSMContext):
             "add_money",
             "add_no_money",
             "Internal_memo",
-            "add_offers"
+            "add_offers",
+            "add_private_files"
         ]
     )
 )
@@ -67,31 +68,68 @@ async def organization_for_simple(callback: CallbackQuery, state: FSMContext):
                 break
     await state.update_data(callback_data=callback.data, button_text=button_text)
     org_select = await rq_reg.get_all_organization()
-    await callback.message.answer(
-        "Выберите организацию для добавления ",
-        reply_markup=kb_sample.select_sample_org(org_select, prefix="org_select"),
-    )
-    await state.set_state(st.upload_link_files_sample.select_org_sample)
+    if callback.data == 'add_private_files':
+        await callback.message.answer(
+            "Выберите организацию для добавления ",
+            reply_markup=kb_sample.select_sample_org(org_select, prefix="org_private"),
+        )
+        await state.set_state(st.upload_link_files_sample.select_org_sample)
+    else:
+        await callback.message.answer(
+            "Выберите организацию для добавления ",
+            reply_markup=kb_sample.select_sample_org(org_select, prefix="org_select"),
+        )
+        await state.set_state(st.upload_link_files_sample.select_org_sample)
 
 
-@router.callback_query(F.data.startswith("org_select"))
+@router.callback_query(F.data.startswith(("org_select", "org_private"))) 
 async def select_user_department(callback: CallbackQuery, state: FSMContext):
+    if callback.data.startswith("org_private"):
+        parts = callback.data.split("|")
+        if len(parts) != 2:
+            await callback.answer("Такой оргазиции не существует", show_alert=True)
+            return
+        organization_id = int(parts[1])
+        dept_id = await rq_reg.get_all_department(organization_id)
+        await callback.message.answer("Выберите отдел куда добавить файл",
+                                      reply_markup=kb_sample.select_sample_dept(departments=dept_id, prefix="private"))
+        await state.update_data(organization_id=organization_id)
+        organization_name = await rq_link.get_organization_name(organization_id)
+    else:
+        parts = callback.data.split("|")
+        if len(parts) != 2:
+            await callback.answer("Такой оргазиции не существует", show_alert=True)
+            return
+        
+        organization_id = int(parts[1])
+        await state.set_state(st.upload_link_files_sample.select_org_sample)
+        await state.update_data(organization_id=organization_id)
+        organization_name = await rq_link.get_organization_name(organization_id)
+        await callback.answer()
+        await callback.message.answer(
+            f"Выбрана организация: {organization_name}" f"\nОтпрвьте название документа",
+            reply_markup=kb_sample.back_menu_sample,
+        )
+
+
+@router.callback_query(F.data.startswith(("private"))) 
+async def select_user_dept_for_private(callback: CallbackQuery, state: FSMContext):
     parts = callback.data.split("|")
     if len(parts) != 2:
         await callback.answer("Такой оргазиции не существует", show_alert=True)
         return
-    organization_id = int(parts[1])
-    await state.set_state(st.upload_link_files_sample.select_org_sample)
-    await state.update_data(organization_id=organization_id)
-    organization_name = await rq_link.get_organization_name(organization_id)
-    await callback.answer()
+    dept_id = int(parts[1])
+    await state.set_state(st.upload_link_files_sample.select_dept_sample)
+    await state.update_data(dept_id=dept_id)
+    organization_name = await rq_reg.get_department_name(dept_id)
     await callback.message.answer(
         f"Выбрана организация: {organization_name}" f"\nОтпрвьте название документа",
         reply_markup=kb_sample.back_menu_sample,
     )
 
 
-@router.message(st.upload_link_files_sample.select_org_sample)
+@router.message(StateFilter (st.upload_link_files_sample.select_org_sample,
+                             st.upload_link_files_sample.select_dept_sample))
 async def upload_link_sample(message: Message, state: FSMContext):
     await state.update_data(name=message.text)
     await message.answer(
@@ -109,16 +147,30 @@ async def confirmation_sample_file(message: Message, state: FSMContext):
     organization_id = data.get("organization_id")
     name = data.get("name")
     link = data.get("link")
+    dept_id = data.get('dept_id')
+    dept_name = await rq_reg.get_department_name(dept_id)
     org = await rq_link.get_organization_name(organization_id)
-    await message.answer(
-        f"Тип файла: '{type}'"
-        f"\nОрганизация: '{org}'"
-        f"\nНазвание файла: '{name}'"
-        f"\nСсылка на файл: <a href='{link}'>Ссылка</a>",
-        parse_mode="HTML",
-        reply_markup=kb_sample.inline_add_sample,
-        disable_web_page_preview=True
-    )
+    if dept_id is None:
+        await message.answer(
+            f"Тип файла: '{type}'"
+            f"\nОрганизация: '{org}'"
+            f"\nНазвание файла: '{name}'"
+            f"\nСсылка на файл: <a href='{link}'>Ссылка</a>",
+            parse_mode="HTML",
+            reply_markup=kb_sample.inline_add_sample,
+            disable_web_page_preview=True
+        )
+    else:
+        await message.answer(
+            f"Тип файла: '{type}'"
+            f"\nОрганизация: '{org}'"
+            f"\nНазвание файла: '{name}'"
+            f"\nОтдел: {dept_name}"
+            f"\nСсылка на файл: <a href='{link}'>Ссылка</a>",
+            parse_mode="HTML",
+            reply_markup=kb_sample.inline_add_sample,
+            disable_web_page_preview=True
+        )
 
 
 @router.callback_query(F.data.in_(["ok_sample", "no_sample"]))
@@ -128,6 +180,7 @@ async def save_sample(callback: CallbackQuery, state: FSMContext):
         organization_id = data.get("organization_id")
         name = data.get("name")
         link = data.get("link")
+        dept_id = data.get('dept_id')
         callback_text = data.get("button_text")
         if not all([organization_id, link, name]):
             await callback.message.answer(
@@ -136,7 +189,7 @@ async def save_sample(callback: CallbackQuery, state: FSMContext):
             await state.finish()
             return
         success, result = await rq_link.save_sample_link(
-            organization_id, link, name, callback_text
+            organization_id, link, name, callback_text, dept_id
         )
         if success:
             await callback.message.answer(
@@ -539,3 +592,13 @@ async def handle_dept_link_upload(message: Message, state: FSMContext):
     name = 'Регламент'
     await rq_link.save_dept_offer(type, name, video_link)
     await message.answer('Сохранено!')
+
+@router.callback_query(F.data == 'motivation')
+async def get_private_files(callback: CallbackQuery):
+    telegram_id = callback.from_user.id
+    file_link = await rq_link.get_user_dept(telegram_id)
+    if not file_link:
+        await callback.message.answer("Данная кнопка находить в разработке")
+    else:
+        await callback.message.answer(f'<a href=\"{file_link}\">Открыть файл</a>',
+                                      parse_mode='HTML')

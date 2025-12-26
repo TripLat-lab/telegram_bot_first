@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 import asyncio
-from sqlalchemy import select, or_, and_
+from sqlalchemy import select, or_, and_, update
 from aiogram.fsm.context import FSMContext
 from main import Bot
 
@@ -319,3 +319,17 @@ async def check_is_private_files(telegram_id: int):
         )
 
         return is_private
+
+
+async def save_private(dept_id: int):
+    async with async_session() as session: 
+        async with session.begin(): 
+            result = await session.execute(
+                update(db.Department)
+                .where(db.Department.id == dept_id)
+                .values(private=True)
+            )
+        if result.rowcount > 0:
+            return True  
+        else:
+            return False 

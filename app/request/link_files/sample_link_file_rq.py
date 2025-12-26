@@ -73,7 +73,7 @@ async def get_organization_name(organization_id):
         return name
 
 
-async def save_sample_link(organization_id, link, name, callback_text=None):
+async def save_sample_link(organization_id, link, name, callback_text=None, dept_id=None):
     async with async_session() as session:
         result = await session.execute(
             select(db.Organization)
@@ -82,46 +82,44 @@ async def save_sample_link(organization_id, link, name, callback_text=None):
         )
         organization = result.scalar_one_or_none()
         if organization is None:
-            link_error = f"Организация с id={organization_id} не найдена"
-            return False, link_error
+            return False, f"Организация с id={organization_id} не найдена"
+
         departments = organization.departments
         if not departments:
-            link_error = f"У организации id={organization_id} нет отделов"
-            return False, link_error
-        department_obj = departments[0]
-        department_id = department_obj.id
+            return False, f"У организации id={organization_id} нет отделов"
+
+        department_id = dept_id or departments[0].id
+
         existing = await session.execute(
             select(db.DepartmentFile).where(db.DepartmentFile.sample_public == link)
         )
-        existing_record = existing.scalars().first()
-        if existing_record:
-            link_error = f" ссылкой '{link}' уже существует"
-            return False, link_error
-        type_value = None
-        if callback_text:
-            if callback_text in (
-                "Заявление на отпуск",
-                "Заявление на трудоустройство",
-                "Заявление об увольнении",
-                "Заявление на компенсацию",
-                "Заявление на отпуск за свой счет",
-                "Служебные записки",
-                "Положения (ЛНА)",
-                "Информация о ДМС",
-            ):
-                type_value = callback_text
+        if existing.scalars().first():
+            return False, f"Ссылкой '{link}' уже существует"
+
+        allowed_types = (
+            "Заявление на отпуск",
+            "Заявление на трудоустройство",
+            "Заявление об увольнении",
+            "Заявление на компенсацию",
+            "Заявление на отпуск за свой счет",
+            "Служебные записки",
+            "Положения (ЛНА)",
+            "Информация о ДМС",
+            "Добавить приватный файл"
+        )
+        type_value = callback_text if callback_text in allowed_types else None
+
         new_sample = db.DepartmentFile(
             organization_id=organization_id,
             department_id=department_id,
             name=name,
-            sample_public=organization_id,
+            sample_public=link,
             file_path=link,
             type=type_value,
         )
         session.add(new_sample)
         await session.commit()
-        test = "ГОТОВО"
-        return True, test
+        return True, "ГОТОВО"
 
 
 async def get_user_name(user_number):
@@ -409,4 +407,18 @@ async def mentor_or_user(user_number):
         mentor_id = await session.execute(select(db.Supervisor.supervisor_id)
                                           .where(db.Supervisor.supervisor_id == user_id))
         result = mentor_id.scalar_one_or_none()
+        return result
+
+async def get_user_dept(telegram_id):
+    async with async_session() as session:
+        dept_id = (await session.execute(select(db.User.user_department_id)
+                                       .where(db.User.telegram_id == telegram_id)
+                                       )).scalar_one_or_none()
+        if dept_id is None:
+            return None
+        
+        file_link = await session.execute(select(db.DepartmentFile.file_path)
+                                        .where(and_(db.DepartmentFile.type == 'Добавить приватный файл',
+                                                    db.DepartmentFile.department_id == dept_id)))
+        result = file_link.scalar_one_or_none()
         return result
