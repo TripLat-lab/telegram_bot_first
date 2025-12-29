@@ -437,7 +437,7 @@ async def start_add_boss(callback: CallbackQuery):
     await callback.answer()
 
 
-@router.callback_query(F.data.startswith("get_org|"))
+@router.callback_query(F.data.startswith("get_org"))
 async def select_organization_boss(callback: CallbackQuery, state: FSMContext):
     parts = callback.data.split("|")
     if len(parts) != 2:
@@ -447,7 +447,7 @@ async def select_organization_boss(callback: CallbackQuery, state: FSMContext):
     await state.update_data(organization_id=organization_id)
     await state.set_state(st.add_boss.organization)
     get_org = organization_id
-    dep = await rq_reg.get_all_department_boss(get_org)
+    dep = await rq_reg.get_all_department(get_org)
     if not dep:
         await callback.message.answer("Нет доступных отделов!")
         return
@@ -516,7 +516,7 @@ async def mentor_or_boss(callback: CallbackQuery, state: FSMContext):
         mentor = "No"
         organization_id = data.get("organization_id")
         telegram = str(telegram_url)
-        user = await rq_reg.get_user_name(user_number=None, name_id=name_id)
+        user = await rq_reg.get_user_name(user_id=name_id, user_number=None, telegram_id=None)
         department = await rq_reg.get_department_name(department_id)
         organization = await rq_reg.get_all_organization_name(organization_id)
         await state.update_data(mentor=mentor)
@@ -537,7 +537,7 @@ async def mentor_or_boss(callback: CallbackQuery, state: FSMContext):
         department_id = data.get("department_id")
         organization_id = data.get("organization_id")
         telegram = str(telegram_url)
-        user = await rq_reg.get_user_name(user_number=None, name_id=name_id)
+        user = await rq_reg.get_user_name(user_id=name_id, user_number=None, telegram_id=None)
         department = await rq_reg.get_department_name(department_id)
         organization = await rq_reg.get_all_organization_name(organization_id)
         mentor = department
@@ -579,7 +579,7 @@ async def save_boss(callback: CallbackQuery, state: FSMContext):
     await state.clear() 
 
 
-@router.callback_query(F.data == 'add_private')
+@router.callback_query(F.data.in_(["add_private"]))
 async def select_priv_org(callback: CallbackQuery):
     org_id = await rq_reg.get_all_organization()
     await callback.message.answer('Выберите организацию',

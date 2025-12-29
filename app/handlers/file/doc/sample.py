@@ -55,11 +55,13 @@ async def select_type_file(callback: CallbackQuery, state: FSMContext):
             "add_no_money",
             "Internal_memo",
             "add_offers",
-            "add_private_files"
+            "add_private_files",
+            'add_private_pto'
         ]
     )
 )
 async def organization_for_simple(callback: CallbackQuery, state: FSMContext):
+    private_list = ('add_private_files', 'add_private_pto')
     button_text = None
     for row in callback.message.reply_markup.inline_keyboard:
         for button in row:
@@ -68,7 +70,7 @@ async def organization_for_simple(callback: CallbackQuery, state: FSMContext):
                 break
     await state.update_data(callback_data=callback.data, button_text=button_text)
     org_select = await rq_reg.get_all_organization()
-    if callback.data == 'add_private_files':
+    if callback.data in private_list:
         await callback.message.answer(
             "Выберите организацию для добавления ",
             reply_markup=kb_sample.select_sample_org(org_select, prefix="org_private"),
@@ -593,12 +595,4 @@ async def handle_dept_link_upload(message: Message, state: FSMContext):
     await rq_link.save_dept_offer(type, name, video_link)
     await message.answer('Сохранено!')
 
-@router.callback_query(F.data == 'motivation')
-async def get_private_files(callback: CallbackQuery):
-    telegram_id = callback.from_user.id
-    file_link = await rq_link.get_user_dept(telegram_id)
-    if not file_link:
-        await callback.message.answer("Данная кнопка находить в разработке")
-    else:
-        await callback.message.answer(f'<a href=\"{file_link}\">Открыть файл</a>',
-                                      parse_mode='HTML')
+

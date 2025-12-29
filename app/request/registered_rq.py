@@ -266,10 +266,8 @@ async def select_users_department_and_mentor(user_number: int):
 
         supervisor_id = await session.scalar(
             select(db.Supervisor.supervisor_id).where(
-                (db.Supervisor.department_id == user_department_id) &
-                (db.Supervisor.organization_id == user_organization_id)
+                (db.Supervisor.department_id == user_department_id))
             )
-        )
         if not supervisor_id:
             return None
 
@@ -333,3 +331,24 @@ async def save_private(dept_id: int):
             return True  
         else:
             return False 
+        
+
+        
+async def get_private_files(user_id, type_):
+    async with async_session() as session:
+        dept_id = await session.scalar(
+            select(db.User.user_department_id)
+            .where(db.User.id == user_id)
+        )
+
+        if dept_id is None:
+            return 
+
+        file_link = await session.scalar(
+            select(db.DepartmentFile.sample_public)
+            .where(and_(
+                db.DepartmentFile.department_id == dept_id,
+                db.DepartmentFile.type == type_)
+            )
+        )
+        return file_link

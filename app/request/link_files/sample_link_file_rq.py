@@ -105,7 +105,8 @@ async def save_sample_link(organization_id, link, name, callback_text=None, dept
             "Служебные записки",
             "Положения (ЛНА)",
             "Информация о ДМС",
-            "Добавить приватный файл"
+            "Мотивация",
+            'Структура ПТО'
         )
         type_value = callback_text if callback_text in allowed_types else None
 

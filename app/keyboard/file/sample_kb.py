@@ -3,7 +3,8 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 inline_add_doc_file = InlineKeyboardMarkup(
     inline_keyboard=[
-        [InlineKeyboardButton(text="Добавить приватный файл", callback_data="add_private_files")],
+        [InlineKeyboardButton(text='Структура ПТО', callback_data='add_private_pto')],
+        [InlineKeyboardButton(text="Мотивация", callback_data="add_private_files")],
         [InlineKeyboardButton(text="Фотографии", callback_data="photo")],
         [InlineKeyboardButton(text="Образцы заявлений", callback_data="add_sample")],
         [InlineKeyboardButton(text="Положения (ЛНА)", callback_data="add_offers")],

@@ -11,6 +11,17 @@ inline_total_menu_private = InlineKeyboardMarkup(inline_keyboard=[
         InlineKeyboardButton(text='Welcome Book', callback_data='welcome')]
         ])
 
+inline_total_menu_private_pto = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text='Структура', callback_data='motivation')],
+        [InlineKeyboardButton(text='Наши направления', callback_data='directions'),
+         InlineKeyboardButton(text='Филиалы', callback_data='branches')],
+        [InlineKeyboardButton(text='Бонусы', callback_data='bonus'),
+        InlineKeyboardButton(text='Порядок трудоустройства', callback_data='employment')],
+        [InlineKeyboardButton(text='Регламенты', callback_data='next_seven'),
+        InlineKeyboardButton(text='Welcome Book', callback_data='welcome')]
+        ])
+
+
 
 inline_total_menu = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text='Наши направления', callback_data='directions'),
@@ -30,7 +41,7 @@ inline_info_branches = InlineKeyboardMarkup(inline_keyboard=[
 ])
 
 inline_back_info_pmk = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text='офис', callback_data='total_office'),
+    [InlineKeyboardButton(text='Офис', callback_data='total_office'),
     InlineKeyboardButton(text='Производство', callback_data='factory')],
     [InlineKeyboardButton(text='Назад', callback_data='back_total_info')]
 ])

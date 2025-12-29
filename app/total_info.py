@@ -18,14 +18,26 @@ logger = logging.getLogger(__name__)
 async def back_total_info(callback: CallbackQuery):
     await callback.message.answer('Выберите нужный пункт', reply_markup=kb_info.inline_total_menu)
 
-@router.message (F.text == 'Общая информация')
-async def total_info_start (message: Message):
+@router.message(F.text == 'Общая информация')
+async def total_info_start(message: Message):
     user_id = message.from_user.id
     is_private = await rq_reg.check_is_private_files(user_id)
-    if not is_private:
-        await message.answer('Выберите нужный пункт', reply_markup=kb_info.inline_total_menu)
-    else:
+    user_number = await rq_reg.get_user_number(user_id)
+    dept_id = await rq_reg.get_dept_id(user_number)
+    dept_name = await rq_reg.get_department_name(dept_id)
+
+    if is_private:
         await message.answer('Выберите нужный пункт', reply_markup=kb_info.inline_total_menu_private)
+        return
+
+    if dept_name == 'Отдел ПТО':
+        await message.answer('Выберите нужный пункт', reply_markup=kb_info.inline_total_menu_private_pto)
+        return
+    if dept_name == 'Коммерческий отдел':
+        await message.answer('Выберите нужный пункт', reply_markup=kb_info.inline_total_menu_private)
+        return
+    else:
+        await message.answer('Выберите нужный пункт' f'\n\n{dept_name}', reply_markup=kb_info.inline_total_menu)
 
 @router.callback_query(F.data == 'branches')
 async def info_branches (callback: CallbackQuery):
@@ -547,11 +559,7 @@ async def office_job_info (callback: CallbackQuery):
         'Привет! 👋 Добро пожаловать в нашу команду! Этот бот поможет тебе разобраться с порядком трудоустройства.\n\n'
         'Твой офис находится на Ядринцевской, 72?\n'
         '•  Тогда в первый рабочий день приходи в офис, на 8 этаж к 09:30 с документами. Тебя встретит HR-менеджер и сопроводит на оформление.\n'
-        'Если твой офис в другом месте:\n'
-        '•  По возможности, за день или несколько дней до первого рабочего дня, или, если это невозможно, приходи к 9:30 в день трудоустройства с документами на'
-        ' Ядринцевскую, 72, 8 этаж. HR-менеджер встретит тебя и займётся твоим оформлением.\n'
-        'После этого мы отправим тебя в твой офис.\n'
-        'Список необходимых документов для трудоустройства (для всех офисов):\n'
+        'Список необходимых документов для трудоустройства:\n'
         '✅ Паспорт (и прописка)\n'
         '✅ СНИЛС\n'
         '✅ ИНН (достаточно знать номер)\n'
@@ -602,7 +610,7 @@ async def vahta_info(callback:CallbackQuery):
     '  •  Мы согласуем с тобой удобную дату и маршрут, а затем приобретем билеты до места работы.\n\n'
     'Удачи в процессе трудоустройства! Если возникнут вопросы, не стесняйся спрашивать!')
     await callback.message.answer(text,reply_markup=kb_info.inline_back_info)
-    type_value = 'Медецинская комиссия'
+"""    type_value = 'Медецинская комиссия'
     await callback.answer("⏳ Ищем файлы...")
 
     file_records = await rq_link.get_commission_photo(type_value, organization_id = None, department_id = None)
@@ -616,8 +624,26 @@ async def vahta_info(callback:CallbackQuery):
             else:
                 await callback.message.answer("Файл не найден на сервере")
     else:
-        await callback.message.answer("Файл не найден в базе данных")
+        await callback.message.answer("Файл не найден в базе данных")"""
 
 @router.callback_query(F.data == 'motivation')
 async def motivation(callback: CallbackQuery):
-    pass
+    button_text = None
+    for row in callback.message.reply_markup.inline_keyboard:
+        for button in row:
+            if button.callback_data == callback.data:
+                button_text = button.text
+                break
+    if button_text == 'Структура':
+        type = 'Структура ПТО'
+    else:
+        type=button_text
+    telegram_id =  callback.from_user.id
+    user_number = await rq_reg.get_user_number(telegram_id)
+    user_id = await rq_reg.get_user_id(user_number) 
+    file_link = await rq_reg.get_private_files(user_id=user_id, type_=type)
+    if not file_link:
+        await callback.message.answer("Файл не найден")
+        return
+    await callback.message.answer(f'<a href=\"{file_link}\">Открыть файл</a>',
+                                      parse_mode='HTML', reply_markup=kb_info.inline_back_info)
