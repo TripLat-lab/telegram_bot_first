@@ -7,7 +7,7 @@ inline_total_menu_private = InlineKeyboardMarkup(inline_keyboard=[
          InlineKeyboardButton(text='Филиалы', callback_data='branches')],
         [InlineKeyboardButton(text='Бонусы', callback_data='bonus'),
         InlineKeyboardButton(text='Порядок трудоустройства', callback_data='employment')],
-        [InlineKeyboardButton(text='Регламенты', callback_data='next_seven'),
+        [InlineKeyboardButton(text='Регламенты', callback_data='reglament_info'),
         InlineKeyboardButton(text='Welcome Book', callback_data='welcome')]
         ])
 
@@ -17,7 +17,7 @@ inline_total_menu_private_pto = InlineKeyboardMarkup(inline_keyboard=[
          InlineKeyboardButton(text='Филиалы', callback_data='branches')],
         [InlineKeyboardButton(text='Бонусы', callback_data='bonus'),
         InlineKeyboardButton(text='Порядок трудоустройства', callback_data='employment')],
-        [InlineKeyboardButton(text='Регламенты', callback_data='next_seven'),
+        [InlineKeyboardButton(text='Регламенты', callback_data='reglament_info'),
         InlineKeyboardButton(text='Welcome Book', callback_data='welcome')]
         ])
 
@@ -28,7 +28,7 @@ inline_total_menu = InlineKeyboardMarkup(inline_keyboard=[
          InlineKeyboardButton(text='Филиалы', callback_data='branches')],
         [InlineKeyboardButton(text='Бонусы', callback_data='bonus'),
         InlineKeyboardButton(text='Порядок трудоустройства', callback_data='employment')],
-        [InlineKeyboardButton(text='Регламенты', callback_data='next_seven'),
+        [InlineKeyboardButton(text='Регламенты', callback_data='reglament_info'),
         InlineKeyboardButton(text='Welcome Book', callback_data='welcome')],
         ])
 

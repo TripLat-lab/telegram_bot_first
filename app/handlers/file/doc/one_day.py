@@ -425,3 +425,19 @@ async def upload_welcomebook(callback: CallbackQuery):
                      )
                else:
                      await callback.message.answer("Файл не найден в базе данных")
+
+@router.callback_query(F.data == 'reglament_info')
+async def regulations(callback: CallbackQuery):
+    name = 'Регламент'
+    regulations_all = await rq_link.get_regulations_all(name)
+    await callback.message.answer(f'А теперь давай углубимся в детали. Чтобы ты мог глубже понять функционал каждого отдела, ' 
+                                  'давай-ка изучим <b>регламенты работы каждого отдела</b> 📚. '
+                                  'Это поможет тебе разобраться в функционале отделов досконально и подробно объяснит, как всё работает "изнутри".',
+                                   reply_markup=kb_start.regulations_all_info(regulations_all), parse_mode='HTML')
+
+@router.callback_query(F.data.startswith('regulation_info|'))
+async def uploud_regulation_link(callback: CallbackQuery):
+    parts = callback.data.split('|')
+    file_id = int(parts[1])
+    link = await rq_link.upload_link(file_id)
+    await callback.message.answer(f'<a href="{link}">Открыть файл</a>', parse_mode="HTML", reply_markup=kb_start.inline_next_key_eight)

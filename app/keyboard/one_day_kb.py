@@ -87,3 +87,16 @@ def regulations_all(regulations, prefix = 'regulation'):
     builder.adjust(1)
     return builder.as_markup()
 
+def regulations_all_info(regulations, prefix = 'regulation_info'):
+    builder = InlineKeyboardBuilder()
+    for regulation in regulations:
+        regulation_name = regulation.type
+        builder.button(
+            text=regulation_name, callback_data=f'{prefix}|{regulation.id}'
+        )
+    builder.adjust(1)
+    builder.button(text='Все понятно, готов к дальнейшим шагам', callback_data='next_eight')
+    builder.button(text='Назад', callback_data='back_total_info')
+    builder.adjust(1)
+    return builder.as_markup()
+
