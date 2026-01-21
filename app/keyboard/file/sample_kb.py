@@ -8,7 +8,7 @@ inline_add_doc_file = InlineKeyboardMarkup(
         [InlineKeyboardButton(text="Фотографии", callback_data="photo")],
         [InlineKeyboardButton(text="Образцы заявлений", callback_data="add_sample")],
         [InlineKeyboardButton(text="Положения (ЛНА)", callback_data="add_offers")],
-        [InlineKeyboardButton(text="ПДФ", callback_data="add_pdf")],
+        [InlineKeyboardButton(text="файлы ПДФ и url(WB, Инфо_гк, Инфо_о_компании)", callback_data="add_pdf")],
         [InlineKeyboardButton(text="Видео преведствие", callback_data="add_videos")],
         [InlineKeyboardButton(text='Положения отделов', callback_data='department_offer')],
         [InlineKeyboardButton(text="Назад", callback_data="back_sample_admin")],
@@ -22,12 +22,6 @@ inline_add_pdf_file = InlineKeyboardMarkup(
             InlineKeyboardButton(
                 text="Оргструктура компании", callback_data="company_structure"
             ),
-        ],
-        [
-            InlineKeyboardButton(
-                text="Регламенты отделов", callback_data="add_department_pdf"
-            ),
-            InlineKeyboardButton(text="Процессы", callback_data="process"),
         ],
         [
             InlineKeyboardButton(text="Информация о ДМС", callback_data="dms_info"),

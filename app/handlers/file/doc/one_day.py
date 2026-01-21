@@ -9,6 +9,7 @@ from typing import Optional
 import asyncio
 
 import app.keyboard.one_day_kb as kb_start
+import app.keyboard.total_ifo_kb as kb_info
 import app.request.link_files.sample_link_file_rq as rq_link
 import app.request.registered_rq as rq_reg
 
@@ -105,58 +106,31 @@ async def one_day_select_user_id(message: Message):
    await message.answer(f"{text}", parse_mode="HTML", disable_web_page_preview=True, reply_markup=kb_start.inline_next_key_one)
 @router.callback_query(F.data == 'next_one')
 async def get_company_info_GK(callback: CallbackQuery):
-   text = ('Отлично! Теперь, когда мы немного познакомились, предлагаю тебе окунуться в мир нашей группы компаний'
-   ' "ПМК". \n\n🧭 Чтобы тебе было легче ориентироваться, изучи, пожалуйста, все <b>наши основные направления.</b>')
-   type_value = 'Информация о ГК'
-   await callback.answer("⏳ Ищем файлы...")
-   file_records = await rq_link.get_commission_photo(type_value, organization_id=None, department_id=None)
-   if file_records:
-      for file_record in file_records:
-         file_path = rq_link.BASE_DIR / file_record.file_path
-
-         if file_path.exists() and file_path.is_file():
-               # Отправляем через ускоренный метод
-               await send_pdf_file(
-                  callback=callback,
-                  file_path=file_path,
-                  caption=text,
-                  reply_markup=kb_start.inline_next_key_two,
-                  parse_mode='HTML'
-               )
-         else:
-               await callback.message.answer("Файл не найден в базе данных")
+    type_value = 'Информация о ГК'
+    file_link = await rq_link.get_public_files_link(name=type_value)
+    link = f'<a href="{file_link}"> Наши основные направления </a>'
+    text = ('Отлично! Теперь, когда мы немного познакомились, предлагаю тебе окунуться в мир нашей группы компаний'
+    f' "ПМК". \n\n🧭 Чтобы тебе было легче ориентироваться, изучи, пожалуйста, все <b>{link}</b>')
+    if file_link is None:
+        await callback.message.answer(f'Файл не найден\n\n{text}', reply_markup=kb_start.inline_next_key_two, parse_mode='HTML')
+    await callback.message.answer(f'{text}',reply_markup=kb_start.inline_next_key_two, parse_mode='HTML')
 
 @router.callback_query(F.data == 'next_two|next_three')
 async def get_company_info(callback: CallbackQuery):
       try:
-         test = "<b>историю компании, ценности и миссию</b>"
-         text =( f'🌪 Теперь углубимся в {test}.\n'
+        type_value = 'Информация о компании'
+        file_link = await rq_link.get_public_files_link(name=type_value)
+        link = f'<a href="{file_link}">историю компании, ценности и миссию</a>'
+        text =( f'🌪 Теперь углубимся в {link}.\n'
             f'\nМы рады представить вам не просто набор фактов, а живую' 
             f'\nисторию, философию и душу нашей компании. Углубимся в то,'
             f'\nкто мы есть, откуда пришли и куда движемся, а главное –'
             f'\nпочему каждый из нас является неотъемлемой частью этого пути.'
             
          )
-         type_value = 'Информация о компании'
-         await callback.answer("⏳ Ищем файлы...")
-         file_records = await rq_link.get_commission_photo(type_value, organization_id=None, department_id=None)
-         if file_records:
-            for file_record in file_records:
-               file_path = rq_link.BASE_DIR / file_record.file_path
-
-               if file_path.exists() and file_path.is_file():
-                     # Отправляем через ускоренный метод
-                     await send_pdf_file(
-                        callback=callback,
-                        file_path=file_path,
-                        caption=text,
-                        parse_mode="HTML",
-                        reply_markup=kb_start.inline_next_key_three
-                     )
-               else:
-                     await callback.message.answer("Файл не найден в базе данных")
-         else:
-            await callback.message.answer("Тут должна быть призентация")
+        if file_link is None:
+            await callback.message.answer(f'Файл не найден\n\n{text}', reply_markup=kb_start.inline_next_key_three, parse_mode='HTML')
+        await callback.message.answer(f'{text}',reply_markup=kb_start.inline_next_key_three, parse_mode='HTML')
       except Exception as e:
          await callback.message.answer(f"Ошибка: {e}")
 
@@ -352,36 +326,24 @@ async def process_Instructions(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data == 'next_nine')
 async def upload_welcomebook(callback: CallbackQuery):
-   type = 'Welcome book'
-   text = (
-        f'Вернёмся к внутренним организационным моментам. ' 
+    type_value = 'Welcome book'
+    file_link = await rq_link.get_public_files_link(name=type_value)
+    link = f'<a href="{file_link}">Welcome Book 🕮</a>'
+    text =('Вернёмся к внутренним организационным моментам. ' 
         f'\nДля быстрой адаптации в коллективе мы создали для '
-        f'тебя уникальный <b>Welcome Book 🕮</b>, который поможет сориентироваться в первые дни работы.'
-   )
-   text_two = (
+        f'тебя уникальный  {link},  который поможет сориентироваться в первые дни работы.'
+        
+        )
+    text_two = (
         
         f'Отлично, теперь ты подробно изучил наши внутренние регламенты и готов приступить к работе\n'
         f'В заключении давай же узнаем, что тебя ждёт в <b>первый день.</b>'
     )
-   await callback.answer('⏳ Ищем файлы...')
-   file_records = await rq_link.get_commission_photo(type, organization_id=None, department_id=None)
-   if file_records:
-            for file_record in file_records:
-               file_path = rq_link.BASE_DIR / file_record.file_path
-
-               if file_path.exists() and file_path.is_file():
-                     # Отправляем через ускоренный метод
-                     await send_pdf_file(
-                        callback=callback,
-                        file_path=file_path,
-                        caption=text,
-                        parse_mode='HTML'
-
-                     )
-               else:
-                     await callback.message.answer("Файл не найден в базе данных")
-               await asyncio.sleep(1.5)
-               await callback.message.answer(f'{text_two}', parse_mode='HTML', reply_markup=kb_start.inline_next_key_final)
+    if file_link is None:
+        await callback.message.answer(f'Файл не найден\n\n{text}', parse_mode='HTML')
+    await callback.message.answer(f'{text}', parse_mode='HTML')
+    await asyncio.sleep(1.5)
+    await callback.message.answer(f'{text_two}', parse_mode='HTML', reply_markup=kb_start.inline_next_key_final)
 
 @router.callback_query(F.data == 'final')
 async def final(callback: CallbackQuery):
@@ -402,29 +364,17 @@ async def final(callback: CallbackQuery):
 
 @router.callback_query(F.data == 'welcome')
 async def upload_welcomebook(callback: CallbackQuery):
-   type = 'Welcome book'
-   text = (
-        f'Вернёмся к внутренним организационным моментам. ' 
+    type_value = 'Welcome book'
+    file_link = await rq_link.get_public_files_link(name=type_value)
+    link = f'<a href="{file_link}">Welcome Book 🕮</a>'
+    text =('Вернёмся к внутренним организационным моментам. ' 
         f'\nДля быстрой адаптации в коллективе мы создали для '
-        f'тебя уникальный <b>Welcome Book 🕮</b>, который поможет сориентироваться в первые дни работы.'
-   )
-   await callback.answer('⏳ Ищем файлы...')
-   file_records = await rq_link.get_commission_photo(type, organization_id=None, department_id=None)
-   if file_records:
-            for file_record in file_records:
-               file_path = rq_link.BASE_DIR / file_record.file_path
-
-               if file_path.exists() and file_path.is_file():
-                     # Отправляем через ускоренный метод
-                     await send_pdf_file(
-                        callback=callback,
-                        file_path=file_path,
-                        caption=text,
-                        parse_mode='HTML'
-
-                     )
-               else:
-                     await callback.message.answer("Файл не найден в базе данных")
+        f'тебя уникальный  {link},  который поможет сориентироваться в первые дни работы.'
+        
+        )
+    if file_link is None:
+        await callback.message.answer(f'Файл не найден\n\n{text}', reply_markup=kb_info.inline_back_info, parse_mode='HTML')
+    await callback.message.answer(f'{text}',reply_markup=kb_info.inline_back_info, parse_mode='HTML')
 
 @router.callback_query(F.data == 'reglament_info')
 async def regulations(callback: CallbackQuery):

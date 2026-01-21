@@ -13,7 +13,7 @@ router = Router()
 SUPPORT_TIMEOUT = timedelta(minutes=5)
 
 cancel_kb = ReplyKeyboardMarkup(
-    keyboard=[[KeyboardButton(text="❌ Отмена")]],
+    keyboard=[[KeyboardButton(text="Отмена")]],
     resize_keyboard=True
 )
 

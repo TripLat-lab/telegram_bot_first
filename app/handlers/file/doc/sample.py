@@ -313,41 +313,25 @@ async def save_pdf_file(callback: CallbackQuery, state: FSMContext):
                 break
     await state.update_data(upload_pdf=button_text)
     await callback.message.answer(
-        "Отправьте PDF-файл велкомбука", reply_markup=kb_sample.back_menu_sample
+        "Отправьте ссылку на документ", reply_markup=kb_sample.back_menu_sample
     )
     await state.set_state(st.add_pdf.upload_pdf)
     await callback.answer()
 
 
 @router.message(
-    F.document.mime_type == "application/pdf", StateFilter(st.add_pdf.upload_pdf)
+    F.text, StateFilter(st.add_pdf.upload_pdf)
 )
 async def handle_pdf_upload(message: Message, state: FSMContext):
     data = await state.get_data()
     description = data.get("upload_pdf")
     try:
-        upload_dir = rq_link.BASE_DIR / "storage/pdf-files"
-        upload_dir.mkdir(exist_ok=True)
-        file_path = upload_dir / message.document.file_name
-        try:
-            file = await message.bot.get_file(message.document.file_id)
-            file_path_tg = file.file_path
-            file_name = message.document.file_name
-            await message.bot.download_file(file_path_tg, destination=file_path)
-        except Exception as download_error:
-            await message.answer("Ошибка при скачивании файла")
-            print(f"Ошибка скачивания: {download_error}")
+        video_link = message.text.strip()
+        if not video_link.startswith(('http://', 'https://')):
+            await message.answer("Пожалуйста, отправьте корректную ссылку (должна начинаться с http:// или https://)")
             return
-        if file_path.stat().st_size == 0:
-            await message.answer("Файл пустой")
-            file_path.unlink()
-            return
-        await rq_link.save_welcome_book(
-            file_path=str(file_path.relative_to(rq_link.BASE_DIR)),
-            type=description,
-            file_name=file_name,
-        )
-        await message.answer("Документ успешно сохранен")
+        await rq_link.save_dept_offer(type=description, name=description, link=video_link)
+        await message.answer('Успешно сохранено!')
     except Exception as e:
         await message.answer(f"Ошибка: {e}")
 

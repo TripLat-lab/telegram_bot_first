@@ -423,3 +423,11 @@ async def get_user_dept(telegram_id):
                                                     db.DepartmentFile.department_id == dept_id)))
         result = file_link.scalar_one_or_none()
         return result
+
+
+async def get_public_files_link(name):
+    async with async_session() as session:
+        public_link = await session.execute(select(db.DepartmentFile.file_path)
+                                       .where(db.DepartmentFile.name == name))
+        result = public_link.scalar_one_or_none()
+        return result
