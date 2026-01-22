@@ -47,31 +47,36 @@ async def send_pdf_file(
     )
 
 
+# Исправление логики для корректной обработки имени и отдела
 @router.message(F.text == "Первый рабочий день")
 async def one_day_select_user_id(message: Message):
-   telegram_id = message.from_user.id
-   user_number = await rq_reg.get_user_number(telegram_id)
-   return_user_data = await rq_reg.select_users_department_and_mentor(user_number)
-   if return_user_data is not None:
-        name, username, number, id = return_user_data
-   else:
-        username = number = id = " "
-        name = 'Иванов Алексей Андреевич'
-   department = await rq_reg.get_user_name_or_dept(id)
-   if not department:
-         text_v1 = f'•  Непосредственный руководитель: {name}, отдела: {department} контактный телефон: {number}, ссылка на его телеграмм аккаунт: {username}'
-         return text_v1
-   text_v1 = f'•  Непосредственный руководитель: {name}, ссылка на его телеграмм аккаунт: {username}'
-   cafe_1 = '<a href="https://yandex.ru/maps/-/CLWgr43x"> “GeLatte”, </a>'
-   cafe_2 = '<a href="https://yandex.ru/maps/-/CLWgrRLD"> “BarBQ” </a>'
-   cafe_3 = '<a href="https://yandex.ru/maps/-/CLWgrRLD"> “Spar” </a>'
-   cafe_4 = '<a href="https://yandex.ru/maps/-/CLWgrRLD"> “Калина-малина” </a>'
-   cafe_5 = '<a href="https://yandex.ru/maps/-/CLWgv4YZ"> "Ярче!" </a>'
-   cafe_6 = '<a href="https://yandex.ru/maps/-/CLWgv6ze"> “Мини-маркет” </a>'
+    telegram_id = message.from_user.id
+    user_number = await rq_reg.get_user_number(telegram_id)
+    return_user_data = await rq_reg.select_users_department_and_mentor(user_number)
 
-   number_card = '<a href="https://docs.google.com/spreadsheets/d/1xwpOeGHJyx6kHafZM7NW8Da8rJJXGL1H/edit?usp=sharing&ouid=107658314868002617699&rtpof=true&sd=true">карточке</a>'
-   card = '<a href="https://yandex.ru/maps/-/CLBRvKIF">ул. Ядринцевская, 72,</a>'
-   text = f"""Добро пожаловать в команду! Чтобы Твой первый день был максимально комфортным и понятным, пожалуйста, ознакомься с информацией ниже.
+    if return_user_data is not None:
+        name, username, number, id = return_user_data
+    else:
+        username = number = id = " "
+        name = 'Иванов Алексей Андреевич'  # Значение по умолчанию
+
+    department = await rq_reg.get_user_name_or_dept(id)
+
+    if not department:
+        text_v1 = f'•  Непосредственный руководитель: {name}, отдела: {department} контактный телефон: {number}, ссылка на его телеграмм аккаунт: {username}'
+        return text_v1
+
+    text_v1 = f'•  Непосредственный руководитель: {name}, ссылка на его телеграмм аккаунт: {username}'
+    cafe_1 = '<a href="https://yandex.ru/maps/-/CLWgr43x"> “GeLatte”, </a>'
+    cafe_2 = '<a href="https://yandex.ru/maps/-/CLWgrRLD"> “BarBQ” </a>'
+    cafe_3 = '<a href="https://yandex.ru/maps/-/CLWgrRLD"> “Spar” </a>'
+    cafe_4 = '<a href="https://yandex.ru/maps/-/CLWgrRLD"> “Калина-малина” </a>'
+    cafe_5 = '<a href="https://yandex.ru/maps/-/CLWgv4YZ"> "Ярче!" </a>'
+    cafe_6 = '<a href="https://yandex.ru/maps/-/CLWgv6ze"> “Мини-маркет” </a>'
+
+    number_card = '<a href="https://docs.google.com/spreadsheets/d/1xwpOeGHJyx6kHafZM7NW8Da8rJJXGL1H/edit?usp=sharing&ouid=107658314868002617699&rtpof=true&sd=true">карточке</a>'
+    card = '<a href="https://yandex.ru/maps/-/CLBRvKIF">ул. Ядринцевская, 72,</a>'
+    text = f"""Добро пожаловать в команду! Чтобы Твой первый день был максимально комфортным и понятным, пожалуйста, ознакомься с информацией ниже.
 \n<b>1. Информация об офисе</b>
    •  Адрес офиса: {card} 8 этаж
 \n•  Ближайшие парковки:
@@ -103,7 +108,7 @@ async def one_day_select_user_id(message: Message):
   • Контакты остальной команды ты можешь найти в {number_card} сотрудников 
 \nЕсли у вас возникнут какие-либо вопросы до вашего первого рабочего дня, не стесняйтесь связаться с нами. Мы с нетерпением ждем встречи!
             """
-   await message.answer(f"{text}", parse_mode="HTML", disable_web_page_preview=True, reply_markup=kb_start.inline_next_key_one)
+    await message.answer(f"{text}", parse_mode="HTML", disable_web_page_preview=True, reply_markup=kb_start.inline_next_key_one)
 @router.callback_query(F.data == 'next_one')
 async def get_company_info_GK(callback: CallbackQuery):
     type_value = 'Информация о ГК'
@@ -112,7 +117,7 @@ async def get_company_info_GK(callback: CallbackQuery):
     text = ('Отлично! Теперь, когда мы немного познакомились, предлагаю тебе окунуться в мир нашей группы компаний'
     f' "ПМК". \n\n🧭 Чтобы тебе было легче ориентироваться, изучи, пожалуйста, все <b>{link}</b>')
     if file_link is None:
-        await callback.message.answer(f'Файл не найден\n\n{text}', reply_markup=kb_start.inline_next_key_two, parse_mode='HTML')
+        return await callback.message.answer(f'Файл не найден\n\n{text}', reply_markup=kb_start.inline_next_key_two, parse_mode='HTML')
     await callback.message.answer(f'{text}',reply_markup=kb_start.inline_next_key_two, parse_mode='HTML')
 
 @router.callback_query(F.data == 'next_two|next_three')
@@ -129,7 +134,7 @@ async def get_company_info(callback: CallbackQuery):
             
          )
         if file_link is None:
-            await callback.message.answer(f'Файл не найден\n\n{text}', reply_markup=kb_start.inline_next_key_three, parse_mode='HTML')
+            return await callback.message.answer(f'Файл не найден\n\n{text}', reply_markup=kb_start.inline_next_key_three, parse_mode='HTML')
         await callback.message.answer(f'{text}',reply_markup=kb_start.inline_next_key_three, parse_mode='HTML')
       except Exception as e:
          await callback.message.answer(f"Ошибка: {e}")
@@ -141,7 +146,7 @@ def next_video_kb():
     )
 
 # Универсальная функция для старта последовательности видео
-async def start_video_sequence(callback: CallbackQuery, state: FSMContext, video_links: list[str], video_names: list[str],
+async def start_video_sequence(callback: CallbackQuery, state: FSMContext, video_links: list[str], video_names,
                                 intro_text: str, final_kb: InlineKeyboardMarkup = None, parse_mode=None):
     if not video_links:
         await callback.message.answer("Видео не найдено")
@@ -340,7 +345,7 @@ async def upload_welcomebook(callback: CallbackQuery):
         f'В заключении давай же узнаем, что тебя ждёт в <b>первый день.</b>'
     )
     if file_link is None:
-        await callback.message.answer(f'Файл не найден\n\n{text}', parse_mode='HTML')
+        return await callback.message.answer(f'Файл не найден\n\n{text}', parse_mode='HTML')
     await callback.message.answer(f'{text}', parse_mode='HTML')
     await asyncio.sleep(1.5)
     await callback.message.answer(f'{text_two}', parse_mode='HTML', reply_markup=kb_start.inline_next_key_final)
@@ -373,7 +378,7 @@ async def upload_welcomebook(callback: CallbackQuery):
         
         )
     if file_link is None:
-        await callback.message.answer(f'Файл не найден\n\n{text}', reply_markup=kb_info.inline_back_info, parse_mode='HTML')
+        return await callback.message.answer(f'Файл не найден\n\n{text}', reply_markup=kb_info.inline_back_info, parse_mode='HTML')
     await callback.message.answer(f'{text}',reply_markup=kb_info.inline_back_info, parse_mode='HTML')
 
 @router.callback_query(F.data == 'reglament_info')

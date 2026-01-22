@@ -254,30 +254,54 @@ async def default_org():
 # ====================== Получение наставника ======================
 async def select_users_department_and_mentor(user_number: int):
     async with async_session() as session:
-        user_data = await session.execute(
-            select(db.User.user_department_id, db.User.user_organization_id).where(
-                db.User.number == user_number
-            )
-        )
-        data = user_data.first()
-        if not data:
-            return None
-        user_department_id, user_organization_id = data
 
-        supervisor_id = await session.scalar(
-            select(db.Supervisor.supervisor_id).where(
-                (db.Supervisor.department_id == user_department_id))
+        # 1️⃣ department_id пользователя
+        department_id = await session.scalar(
+            select(db.User.user_department_id)
+            .where(db.User.number == user_number)
+        )
+        if not department_id:
+            return None
+
+        # 2️⃣ имя отдела
+        department_name = await session.scalar(
+            select(db.Department.department_name)
+            .where(db.Department.id == department_id)
+        )
+        if not department_name:
+            return None
+
+        # 3️⃣ все department.id с таким именем
+        department_ids = (
+            await session.scalars(
+                select(db.Department.id)
+                .where(db.Department.department_name == department_name)
             )
+        ).all()
+
+        if not department_ids:
+            return None
+
+        # 4️⃣ supervisor, чей department_id в этом списке
+        supervisor_id = await session.scalar(
+            select(db.Supervisor.supervisor_id)
+            .where(db.Supervisor.department_id.in_(department_ids))
+        )
+
         if not supervisor_id:
             return None
 
-        supervisor_data = await session.execute(
-            select(db.User.name, db.User.username, db.User.number, db.User.id).where(db.User.id == supervisor_id)
+        # 5️⃣ данные супервизора
+        supervisor_info = await session.execute(
+            select(
+                db.User.name,
+                db.User.username,
+                db.User.number,
+                db.User.id
+            ).where(db.User.id == supervisor_id)
         )
-        supervisor_info = supervisor_data.first()
-        if not supervisor_info:
-            return " ", " ", " ", " "
-        return supervisor_info
+
+        return supervisor_info.first()
 
 
 # ====================== Другие утилиты ======================

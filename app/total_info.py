@@ -37,7 +37,7 @@ async def total_info_start(message: Message):
         await message.answer('Выберите нужный пункт', reply_markup=kb_info.inline_total_menu_private)
         return
     else:
-        await message.answer('Выберите нужный пункт' f'\n\n{dept_name}', reply_markup=kb_info.inline_total_menu)
+        await message.answer('Выберите нужный пункт', reply_markup=kb_info.inline_total_menu)
 
 @router.callback_query(F.data == 'branches')
 async def info_branches (callback: CallbackQuery):
