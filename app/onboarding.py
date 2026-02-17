@@ -1,6 +1,6 @@
 from aiogram.types import Message
 from aiogram import Bot, Router
-from app.request.registered_rq import get_user_name
+from app.request.registered_rq import get_user_name, get_user_number
 from aiogram.fsm.state import StatesGroup, State
 from datetime import datetime, timedelta
 from sqlalchemy import select
@@ -169,6 +169,7 @@ async def handle_all_messages(message: Message):
 # ====================== Обработка ответов ======================
 async def process_answer(message: Message):
     user_id = message.from_user.id
+    user_name_for_admin = message.from_user.username
     bot = message.bot
     
     if user_id not in active_polls:
@@ -207,8 +208,13 @@ async def process_answer(message: Message):
         if poll.get("reminder_text"):
             await message.answer(poll["reminder_text"])
         user_name = await get_user_name(user_number=None, user_id=None, telegram_id=user_id)
+        user_number = await get_user_number(user_id)
         # Формируем сводку для администратора
-        summary_parts = [f"📊 Результаты опроса {poll_type} от пользователя {user_name}:"]
+        summary_parts = [f"📊 Результаты опроса {poll_type}"
+                         f"\nзавершен для пользователя {user_name}"
+                         f'\nЮзернейм пользователя: @{user_name_for_admin}'
+                         f'\nНомер телефона пользователя: {user_number}'
+        ]
         
         for i, (question, answer) in enumerate(zip(questions, answers), 1):
             summary_parts.append(f"\n{i}. {question}\n   Ответ: {answer}")
